@@ -2,10 +2,12 @@ from flask import Flask, render_template, request, url_for, flash, session, redi
 from markupsafe import escape
 from flask_sqlalchemy import SQLAlchemy
 from passlib.hash import sha256_crypt
-from DBHelper import DBConnector
 import gemini
 import requests
 import datetime
+
+from DBHelper import DBConnector
+from MailHelper import MailConnector
 
 ## Segregate it to separate file 
 def get_weather_data(api_key: str, location: str, start_date: str, end_date: str) -> dict:
@@ -143,6 +145,24 @@ def callTestimonial():
 
 @app.route("/contact")
 def callContact():
+    return render_template("contact.html")
+
+@app.route("/contactus", methods=["POST"])
+def contactUsMail():
+    name = request.form.get("name")
+    subject = request.form.get("subject")
+    message = request.form.get("message")
+    email = request.form.get("email")
+
+    mailObj = MailConnector()
+
+    if mailObj.send_email(subject, message):
+        print("Mail sent successfully")
+        mailObj.send_confirmation(name, email)
+        print("Confirmation sent successfully")
+    else:
+        print("Unable to send mail")
+
     return render_template("contact.html")
 
 @app.route("/dashboard", methods=['POST'])
